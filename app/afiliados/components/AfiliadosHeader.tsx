@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Plus, Upload, ArrowDownToLine } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import type { Contratista, FilterForm } from "../types";
 import { emptyFilterForm, todayStr } from "../constants";
 
@@ -9,7 +9,7 @@ type Props = {
   contratistas: Contratista[];
   filterForm: FilterForm;
   setFilterForm: React.Dispatch<React.SetStateAction<FilterForm>>;
-  appliedFilters: FilterForm;
+  appliedFilters: FilterForm; // Aunque no se usa aquí directamente, es bueno mantener la consistencia
   setAppliedFilters: React.Dispatch<React.SetStateAction<FilterForm>>;
   hasActiveFilters: boolean;
   onOpenAdd: () => void;
@@ -25,12 +25,11 @@ export function AfiliadosHeader({
   onOpenAdd,
   onOpenBulkUpload,
 }: Props) {
-  const handleFormChange =
-    <T extends Record<string, any>>(setter: React.Dispatch<React.SetStateAction<T>>) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      const { name, value } = e.target;
-      setter((prev) => ({ ...prev, [name]: value }));
-    };
+  
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFilterForm((prev) => ({ ...prev, [name]: value }));
+  };
 
   return (
     <div className="max-w-6xl mx-auto bg-white rounded-[32px] shadow-md px-8 py-5 mb-6">
@@ -61,7 +60,8 @@ export function AfiliadosHeader({
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      {/* Grid de filtros corregido: Ahora 3 columnas porque quitamos fechaFin */}
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
         <div>
           <label className="block text-xs font-semibold text-slate-600 mb-1">
             Contratista
@@ -69,7 +69,7 @@ export function AfiliadosHeader({
           <select
             name="contratistaId"
             value={filterForm.contratistaId}
-            onChange={handleFormChange(setFilterForm)}
+            onChange={handleFormChange}
             className="h-9 w-full rounded-full border border-slate-200 bg-slate-50 px-3 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#1f9bb6]"
           >
             <option value="all">Todos</option>
@@ -88,7 +88,7 @@ export function AfiliadosHeader({
           <select
             name="estado"
             value={filterForm.estado}
-            onChange={handleFormChange(setFilterForm)}
+            onChange={handleFormChange}
             className="h-9 w-full rounded-full border border-slate-200 bg-slate-50 px-3 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#1f9bb6]"
           >
             <option value="all">Todos</option>
@@ -99,26 +99,13 @@ export function AfiliadosHeader({
 
         <div>
           <label className="block text-xs font-semibold text-slate-600 mb-1">
-            Fecha Inicio (created_at)
+            Fecha Inicio (Ingreso)
           </label>
           <input
             type="date"
             name="fechaInicio"
             value={filterForm.fechaInicio}
-            onChange={handleFormChange(setFilterForm)}
-            className="h-9 w-full rounded-full border border-slate-200 bg-slate-50 px-3 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#1f9bb6]"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">
-            Fecha Fin
-          </label>
-          <input
-            type="date"
-            name="fechaFin"
-            value={filterForm.fechaFin}
-            onChange={handleFormChange(setFilterForm)}
+            onChange={handleFormChange}
             className="h-9 w-full rounded-full border border-slate-200 bg-slate-50 px-3 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#1f9bb6]"
           />
         </div>
@@ -137,8 +124,8 @@ export function AfiliadosHeader({
           <button
             type="button"
             onClick={() => {
-              setFilterForm({ ...emptyFilterForm, fechaInicio: todayStr });
-              setAppliedFilters({ ...emptyFilterForm, fechaInicio: todayStr });
+              setFilterForm({ ...emptyFilterForm });
+              setAppliedFilters({ ...emptyFilterForm });
             }}
             className="inline-flex items-center gap-2 rounded-full bg-slate-200 px-4 py-1.5 text-[11px] font-semibold text-slate-700 shadow hover:bg-slate-300 transition"
           >
