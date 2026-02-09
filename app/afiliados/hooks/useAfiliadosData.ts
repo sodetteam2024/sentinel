@@ -1,11 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
-import type { AfiliadoRow, Contratista, FilterForm, AfiliadoEstado } from "../types";
-import { fetchAfiliadosRaw, fetchContratistas } from "../services/afiliados.service";
+"use client";
 
-// Definimos la respuesta de la DB para que coincida con lo que devuelve Supabase
-interface AfiliadoDBResponse {
+import { useEffect, useState } from "react";
+import {
+  fetchAfiliadosRaw,
+  fetchContratistas,
+} from "@/app/afiliados/services/afiliados.service";
+import type { AfiliadoEstado } from "@/app/afiliados/types/afiliado";
+
+/** =========================
+ *  TYPES
+ *  ========================= */
+export type FilterForm = {
+  contratistaId?: string; // "all" o id
+  fechaInicio?: string;   // YYYY-MM-DD
+  fechaFin?: string;      // YYYY-MM-DD ✅ FIX
+};
+
+type AfiliadoRow = {
   id: string;
-  tipo_doc: string; // Aquí es string, por eso daba error de asignación
+  tipo_doc: string;
   numero_doc: string;
   primer_nombre: string;
   segundo_nombre: string | null;
@@ -13,79 +26,71 @@ interface AfiliadoDBResponse {
   segundo_apellido: string | null;
   fecha_nacimiento: string | null;
   fecha_expedicion: string | null;
-  contratista_id: string;
+  contratista_id: string | null;
   imagen_url: string | null;
-  estado_actual: string | null;
-  created_at: string | null;
-}
+  estado_actual: AfiliadoEstado;
+  created_at: string;
+  contratista_nombre?: string;
+};
 
-export function useAfiliadosData(appliedFilters: FilterForm, reloadKey: number) {
-  const [contratistas, setContratistas] = useState<Contratista[]>([]);
+/** =========================
+ *  HOOK
+ *  ========================= */
+export function useAfiliadosData(appliedFilters: FilterForm) {
   const [afiliados, setAfiliados] = useState<AfiliadoRow[]>([]);
+  const [contratistas, setContratistas] = useState<
+    { id: string; nombre: string }[]
+  >([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchContratistas()
-      .then((rows) => setContratistas(rows as Contratista[]))
-      .catch((e: unknown) => {
-        console.error("Error cargando contratistas", e);
-      });
-  }, []);
-
-  useEffect(() => {
-    const run = async () => {
-      setLoading(true);
+    async function loadData() {
       try {
-        const data = await fetchAfiliadosRaw({
-          contratistaId: appliedFilters.contratistaId,
-          fechaInicio: appliedFilters.fechaInicio,
-          fechaFin: appliedFilters.fechaFin,
-        });
+        setLoading(true);
+        setError(null);
 
-        const contratistasMap = new Map(contratistas.map((c) => [c.id, c.nombre]));
+        const [afiliadosRaw, contratistasData] = await Promise.all([
+          fetchAfiliadosRaw({
+            contratistaId: appliedFilters.contratistaId,
+            fechaInicio: appliedFilters.fechaInicio,
+            fechaFin: appliedFilters.fechaFin, // ✅ ahora existe
+          }),
+          fetchContratistas(),
+        ]);
 
-        // ✅ CORRECCIÓN: Casteamos el tipo_doc para que sea compatible con AfiliadoRow
-        let mapped: AfiliadoRow[] = (data as AfiliadoDBResponse[] ?? []).map((row) => ({
-          id: row.id,
-          // Forzamos el tipo aquí para que TS acepte el string de la DB como uno de los permitidos
-          tipo_doc: row.tipo_doc as AfiliadoRow["tipo_doc"], 
-          numero_doc: row.numero_doc,
-          primer_nombre: row.primer_nombre,
-          segundo_nombre: row.segundo_nombre,
-          primer_apellido: row.primer_apellido,
-          segundo_apellido: row.segundo_apellido,
-          fecha_nacimiento: row.fecha_nacimiento,
-          fecha_expedicion: row.fecha_expedicion,
-          contratista_id: row.contratista_id,
-          contratista_nombre: contratistasMap.get(row.contratista_id) ?? "Sin contratista",
-          imagen_url: row.imagen_url,
-          estado_actual: (row.estado_actual || "en_cobertura") as AfiliadoEstado,
-          created_at: row.created_at,
+        const contratistasMap = new Map(
+          contratistasData.map((c) => [c.id, c.nombre])
+        );
+
+        const afiliadosConNombre = afiliadosRaw.map((a) => ({
+          ...a,
+          contratista_nombre: a.contratista_id
+            ? contratistasMap.get(a.contratista_id) ?? ""
+            : "",
         }));
 
-        if (appliedFilters.estado !== "all") {
-          mapped = mapped.filter((a) => a.estado_actual === appliedFilters.estado);
-        }
-
-        setAfiliados(mapped);
-      } catch (e: unknown) {
-        console.error("Error cargando afiliados", e);
+        setAfiliados(afiliadosConNombre);
+        setContratistas(contratistasData);
+      } catch (err) {
+        console.error("useAfiliadosData error:", err);
+        setError("Error cargando afiliados");
       } finally {
         setLoading(false);
       }
-    };
+    }
 
-    run();
-  }, [appliedFilters, reloadKey, contratistas]);
+    loadData();
+  }, [
+    appliedFilters.contratistaId,
+    appliedFilters.fechaInicio,
+    appliedFilters.fechaFin, // ✅ dependencia válida
+  ]);
 
-  const hasActiveFilters = useMemo(() => {
-    return (
-      appliedFilters.contratistaId !== "all" ||
-      appliedFilters.estado !== "all" ||
-      !!appliedFilters.fechaInicio ||
-      !!appliedFilters.fechaFin
-    );
-  }, [appliedFilters]);
-
-  return { contratistas, afiliados, loading, hasActiveFilters };
+  return {
+    afiliados,
+    contratistas,
+    loading,
+    error,
+  };
 }
