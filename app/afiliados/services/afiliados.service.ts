@@ -1,10 +1,32 @@
 import { supabase } from "@/lib/supabaseClient";
 import type { AfiliadoEstado } from "../types/afiliado";
 
-// buckets / template (si ya los tienes en constants, puedes moverlos)
+/** =========================
+ *  CONSTANTS
+ *  ========================= */
 const STORAGE_BUCKET = "documentos";
 const TEMPLATE_BUCKET = "assets";
 const TEMPLATE_CARGA_PATH = "templates/plantilla_carga_afiliados.xlsx";
+
+type TipoDoc = "C" | "T" | "E" | "S" | "X";
+
+/** =========================
+ *  TYPES
+ *  ========================= */
+type AfiliadoUpdatePayload = Partial<{
+  primer_nombre: string;
+  segundo_nombre: string | null;
+  primer_apellido: string;
+  segundo_apellido: string | null;
+  tipo_doc: TipoDoc;
+  numero_doc: string;
+  fecha_nacimiento: string | null;
+  fecha_expedicion: string | null;
+  contratista_id: string | null;
+  imagen_url: string | null;
+  estado_actual: AfiliadoEstado;
+  updated_at: string;
+}>;
 
 /** =========================
  *  READ
@@ -24,9 +46,9 @@ export async function fetchContratistas() {
 }
 
 export async function fetchAfiliadosRaw(params: {
-  contratistaId?: string; // "all" o id
-  fechaInicio?: string; // YYYY-MM-DD
-  fechaFin?: string; // YYYY-MM-DD
+  contratistaId?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
 }) {
   let query = supabase
     .from("afiliados")
@@ -53,7 +75,9 @@ export async function fetchAfiliadosRaw(params: {
     query = query.eq("contratista_id", params.contratistaId);
   }
   if (params.fechaInicio) query = query.gte("created_at", params.fechaInicio);
-  if (params.fechaFin) query = query.lte("created_at", `${params.fechaFin}T23:59:59`);
+  if (params.fechaFin) {
+    query = query.lte("created_at", `${params.fechaFin}T23:59:59`);
+  }
 
   const { data, error } = await query;
 
@@ -88,7 +112,7 @@ export async function createAfiliado(payload: {
   segundo_nombre: string | null;
   primer_apellido: string;
   segundo_apellido: string | null;
-  tipo_doc: "C" | "T" | "E" | "S" | "X";
+  tipo_doc: TipoDoc;
   numero_doc: string;
   fecha_nacimiento: string | null;
   fecha_expedicion: string | null;
@@ -115,7 +139,10 @@ export async function createHistorialIngreso(payload: {
   fecha_retiro: string | null;
   estado: AfiliadoEstado;
 }) {
-  const { error } = await supabase.from("historial_afiliacion").insert([payload]);
+  const { error } = await supabase
+    .from("historial_afiliacion")
+    .insert([payload]);
+
   if (error) {
     console.error("createHistorialIngreso error:", error);
     throw error;
@@ -127,9 +154,13 @@ export async function createHistorialIngreso(payload: {
  *  ========================= */
 export async function updateAfiliado(
   afiliadoId: string,
-  payload: Record<string, any>
+  payload: AfiliadoUpdatePayload
 ) {
-  const { error } = await supabase.from("afiliados").update(payload).eq("id", afiliadoId);
+  const { error } = await supabase
+    .from("afiliados")
+    .update(payload)
+    .eq("id", afiliadoId);
+
   if (error) {
     console.error("updateAfiliado error:", error);
     throw error;
@@ -154,7 +185,10 @@ export async function retireAfiliado(afiliadoId: string, fechaRetiro: string) {
   }
 }
 
-export async function reingresarAfiliado(afiliadoId: string, fechaIngreso: string) {
+export async function reingresarAfiliado(
+  afiliadoId: string,
+  fechaIngreso: string
+) {
   await updateAfiliado(afiliadoId, {
     estado_actual: "en_cobertura",
     updated_at: new Date().toISOString(),
@@ -184,7 +218,10 @@ export async function uploadAfiliadoImage(file: File, afiliadoId: string) {
     throw uploadError;
   }
 
-  const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+  const { data } = supabase.storage
+    .from(STORAGE_BUCKET)
+    .getPublicUrl(path);
+
   return data.publicUrl ?? null;
 }
 
@@ -192,7 +229,10 @@ export async function uploadAfiliadoImage(file: File, afiliadoId: string) {
  *  TEMPLATE + EXPORT
  *  ========================= */
 export function getCargaMasivaTemplateUrl() {
-  const { data } = supabase.storage.from(TEMPLATE_BUCKET).getPublicUrl(TEMPLATE_CARGA_PATH);
+  const { data } = supabase.storage
+    .from(TEMPLATE_BUCKET)
+    .getPublicUrl(TEMPLATE_CARGA_PATH);
+
   return data.publicUrl ?? null;
 }
 
