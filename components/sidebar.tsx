@@ -18,7 +18,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutGrid, path: "/dashboard" },
-  { key: "scanner", label: "Scanner", icon: ScanSearch, path: "/scanner" },
+  /*{ key: "scanner", label: "Scanner", icon: ScanSearch, path: "/scanner" },*/
   { key: "afiliados", label: "Afiliados", icon: Users, path: "/afiliados" },
 ];
 

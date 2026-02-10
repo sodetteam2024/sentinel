@@ -29,7 +29,7 @@ export default function AfiliadosTable({
   onReingreso,
 }: Props) {
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-[32px] shadow-md px-6 py-5">
+    <div className="max-w-6xl mx-auto bg-white rounded-[32px] shadow-md px-3 md:px-6 py-5">
       {loading ? (
         <p className="text-xs text-slate-500 px-2">Cargando afiliados…</p>
       ) : afiliados.length === 0 ? (
@@ -40,79 +40,167 @@ export default function AfiliadosTable({
         </p>
       ) : (
         <>
-          <div className="mb-2 grid grid-cols-7 text-xs text-slate-600 px-2">
-            <div className="flex items-center gap-2">
+          {/* ========== VISTA DESKTOP ========== */}
+          <div className="hidden md:block">
+            <div className="mb-2 grid grid-cols-7 text-xs text-slate-600 px-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-300"
+                  onChange={onToggleSelectAll}
+                  checked={afiliados.length > 0 && selectedIds.length === afiliados.length}
+                />
+                <span>Todos</span>
+              </div>
+              <span className="font-semibold">Nombre</span>
+              <span className="font-semibold">Tipo Documento</span>
+              <span className="font-semibold">Nro Documento</span>
+              <span className="font-semibold">Contratista</span>
+              <span className="font-semibold">Estado</span>
+              <span />
+            </div>
+
+            <div className="rounded-xl bg-white shadow-sm border border-slate-200 overflow-hidden">
+              {afiliados.map((row) => (
+                <div
+                  key={row.id}
+                  className="grid grid-cols-7 items-center px-4 py-3 border-t border-slate-100 first:border-t-0"
+                >
+                  <div>
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-slate-300"
+                      checked={selectedIds.includes(row.id)}
+                      onChange={() => onToggleRow(row.id)}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-[#e3f0ff] flex items-center justify-center shadow-inner text-[11px] font-bold text-[#4b7cb3]">
+                      {(row.primer_nombre?.[0] ?? "A") + (row.primer_apellido?.[0] ?? "F")}
+                    </div>
+                    <span className="text-sm font-medium text-slate-900">
+                      {row.primer_nombre} {row.segundo_nombre ? row.segundo_nombre + " " : ""}
+                      {row.primer_apellido}
+                    </span>
+                  </div>
+
+                  <span className="text-xs text-slate-900">{row.tipo_doc}</span>
+                  <span className="text-xs text-slate-900">{row.numero_doc}</span>
+                  <span className="text-xs text-slate-900">
+                    {row.contratista_nombre ?? "Sin contratista"}
+                  </span>
+
+                  <span
+                    className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-[10px] font-semibold ${
+                      row.estado_actual === "en_cobertura"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-rose-50 text-rose-700 border border-rose-200"
+                    }`}
+                  >
+                    {row.estado_actual === "en_cobertura" ? "En cobertura" : "Retirado"}
+                  </span>
+
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      className="flex items-center justify-center text-slate-500 hover:text-[#1f9bb6] transition"
+                      onClick={() => onEdit(row)}
+                      title="Editar afiliado"
+                    >
+                      <Pencil size={18} />
+                    </button>
+
+                    {row.estado_actual === "en_cobertura" && (
+                      <button
+                        type="button"
+                        className="px-2 py-1 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-700 hover:bg-rose-200 transition"
+                        onClick={() => onRetire(row)}
+                      >
+                        Retirar
+                      </button>
+                    )}
+
+                    {row.estado_actual === "retirado" && (
+                      <button
+                        type="button"
+                        className="px-2 py-1 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition"
+                        onClick={() => onReingreso(row)}
+                      >
+                        Reingresar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ========== VISTA MÓVIL ========== */}
+          <div className="md:hidden space-y-3">
+            {/* Header con checkbox de seleccionar todos */}
+            <div className="flex items-center gap-2 px-2 pb-2 border-b border-slate-200">
               <input
                 type="checkbox"
                 className="h-4 w-4 rounded border-slate-300"
                 onChange={onToggleSelectAll}
                 checked={afiliados.length > 0 && selectedIds.length === afiliados.length}
               />
-              <span>Todos</span>
+              <span className="text-xs font-semibold text-slate-600">
+                Seleccionar todos ({afiliados.length})
+              </span>
             </div>
-            <span className="font-semibold">Nombre</span>
-            <span className="font-semibold">Tipo Documento</span>
-            <span className="font-semibold">Nro Documento</span>
-            <span className="font-semibold">Contratista</span>
-            <span className="font-semibold">Estado</span>
-            <span />
-          </div>
 
-          <div className="rounded-xl bg-white shadow-sm border border-slate-200 overflow-hidden">
+            {/* Cards de afiliados */}
             {afiliados.map((row) => (
               <div
                 key={row.id}
-                className="grid grid-cols-7 items-center px-4 py-3 border-t border-slate-100 first:border-t-0"
+                className="bg-slate-50 rounded-2xl p-4 border border-slate-200 shadow-sm"
               >
-                <div>
+                {/* Fila 1: Checkbox + Nombre + Estado */}
+                <div className="flex items-start gap-3 mb-3">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 rounded border-slate-300"
+                    className="h-4 w-4 rounded border-slate-300 mt-1"
                     checked={selectedIds.includes(row.id)}
                     onChange={() => onToggleRow(row.id)}
                   />
-                </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-[#e3f0ff] flex items-center justify-center shadow-inner text-[11px] font-bold text-[#4b7cb3]">
-                    {(row.primer_nombre?.[0] ?? "A") + (row.primer_apellido?.[0] ?? "F")}
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold text-slate-900 mb-1">
+                      {row.primer_nombre} {row.primer_apellido}
+                    </div>
+                    <div className="text-xs text-slate-600">
+                      {row.tipo_doc}-{row.numero_doc}
+                    </div>
                   </div>
-                  <span className="text-sm font-medium text-slate-900">
-                    {row.primer_nombre} {row.segundo_nombre ? row.segundo_nombre + " " : ""}
-                    {row.primer_apellido}
+
+                  <span
+                    className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                      row.estado_actual === "en_cobertura"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-rose-50 text-rose-700 border border-rose-200"
+                    }`}
+                  >
+                    {row.estado_actual === "en_cobertura" ? "Activo" : "Retirado"}
                   </span>
                 </div>
 
-                <span className="text-xs text-slate-900">{row.tipo_doc}</span>
-                <span className="text-xs text-slate-900">{row.numero_doc}</span>
-                <span className="text-xs text-slate-900">
-                  {row.contratista_nombre ?? "Sin contratista"}
-                </span>
-
-                <span
-                  className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-[10px] font-semibold ${
-                    row.estado_actual === "en_cobertura"
-                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                      : "bg-rose-50 text-rose-700 border border-rose-200"
-                  }`}
-                >
-                  {row.estado_actual === "en_cobertura" ? "En cobertura" : "Retirado"}
-                </span>
-
-                <div className="flex items-center justify-end gap-2">
+                {/* Fila 2: Botones de acción */}
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    className="flex items-center justify-center text-slate-500 hover:text-[#1f9bb6] transition"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition"
                     onClick={() => onEdit(row)}
-                    title="Editar afiliado"
                   >
-                    <Pencil size={18} />
+                    <Pencil size={14} />
+                    Editar
                   </button>
 
                   {row.estado_actual === "en_cobertura" && (
                     <button
                       type="button"
-                      className="px-2 py-1 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-700 hover:bg-rose-200 transition"
+                      className="flex-1 px-3 py-2 rounded-xl text-xs font-semibold bg-rose-100 text-rose-700 hover:bg-rose-200 transition border border-rose-200"
                       onClick={() => onRetire(row)}
                     >
                       Retirar
@@ -122,7 +210,7 @@ export default function AfiliadosTable({
                   {row.estado_actual === "retirado" && (
                     <button
                       type="button"
-                      className="px-2 py-1 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition"
+                      className="flex-1 px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition border border-emerald-200"
                       onClick={() => onReingreso(row)}
                     >
                       Reingresar

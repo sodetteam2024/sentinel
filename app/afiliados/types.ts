@@ -50,4 +50,5 @@ export type FilterForm = {
   tipoDoc: string; // ✨ NUEVO
   numeroDoc: string; // ✨ NUEVO
   fechaInicio: string; // Ahora filtra por fecha_ingreso del historial
+  fechaFin: string; // Eliminado, ya no se usa
 };

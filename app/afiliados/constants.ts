@@ -13,4 +13,5 @@ export const emptyFilterForm: FilterForm = {
   tipoDoc: "all", // ✨ NUEVO
   numeroDoc: "", // ✨ NUEVO
   fechaInicio: "",
+  fechaFin: "", // Eliminado, ya no se usa
 };
