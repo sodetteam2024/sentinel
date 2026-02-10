@@ -25,7 +25,8 @@ export default function AfiliadosPage() {
     <main className="min-h-screen bg-[#f3f5f9] flex">
       <Sidebar />
 
-      <section className="flex-1 py-8 px-6 lg:px-10">
+      {/* ✅ pt-16 en móvil por el header fijo, vuelve normal en desktop */}
+      <section className="flex-1 py-8 px-6 lg:px-10 pt-16 lg:pt-8">
         <FiltersCard
           contratistas={p.contratistas}
           filterForm={p.filterForm}
@@ -154,18 +155,15 @@ export default function AfiliadosPage() {
         onDownloadTemplate={p.handleExportTemplate}
       />
 
-{/* ✨ MODAL DE PDF ARREGLADO */}
       <PDFConfirmationModal
         open={p.isPDFConfirming}
         afiliados={p.extractedAfiliados}
         contratista={p.extractedContratista}
-        contratistaId={p.bulkUploadContratistaId} // La "Liga" seleccionada
+        contratistaId={p.bulkUploadContratistaId}
         onConfirm={p.handleConfirmPDFAfiliados}
         onCancel={() => {
           p.setIsPDFConfirming(false);
-          // SOLUCIÓN: Usamos p.setExtractedAfiliados que viene del hook
-          // Esto elimina el error de "Cannot find name"
-          p.setExtractedAfiliados([]); 
+          p.setExtractedAfiliados([]);
         }}
       />
     </main>
