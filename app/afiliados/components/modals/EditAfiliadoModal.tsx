@@ -19,7 +19,8 @@ type Props = {
   editImageFile: File | null;
   setEditImageFile: React.Dispatch<React.SetStateAction<File | null>>;
 
-  editImageInputRef: React.RefObject<HTMLInputElement>;
+  // ✅ Acepta null para que coincida con useRef(null) del page.tsx
+  editImageInputRef: React.RefObject<HTMLInputElement | null>;
 
   historial: HistorialRow[];
   loadingHistorial: boolean;
@@ -59,9 +60,7 @@ export default function EditAfiliadoModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40">
-      {/* Wrapper con scroll de pantalla */}
       <div className="flex min-h-dvh items-start justify-center p-3 sm:p-6 overflow-y-auto">
-        {/* Modal */}
         <div className="relative w-full max-w-5xl bg-white rounded-[24px] sm:rounded-[32px] shadow-2xl">
           {/* Header sticky */}
           <div className="sticky top-0 z-10 flex justify-end bg-white/95 backdrop-blur px-4 sm:px-8 py-3 border-b border-slate-100 rounded-t-[24px] sm:rounded-t-[32px]">
@@ -108,9 +107,7 @@ export default function EditAfiliadoModal({
                   onChange={(e) => {
                     const file = e.target.files?.[0] ?? null;
                     setEditImageFile(file);
-                    if (file) {
-                      setEditImagePreview(URL.createObjectURL(file));
-                    }
+                    if (file) setEditImagePreview(URL.createObjectURL(file));
                   }}
                 />
 
@@ -125,7 +122,6 @@ export default function EditAfiliadoModal({
               {/* Form + Historial */}
               <div className="flex-1 grid gap-6 lg:grid-cols-[2.3fr,1.2fr]">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  {/* Text fields tipados (sin any) */}
                   {textFields.map(({ label, name }) => (
                     <div key={name}>
                       <label className="text-xs font-semibold text-slate-700">
